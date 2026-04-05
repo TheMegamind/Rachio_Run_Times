@@ -1,0 +1,10 @@
+{
+  "name": "Rachio Run Times",
+  "description": "Exposes Rachio zone lastRun, lastRunEndTime, and nextRun timestamps as Home Assistant sensors via the cloud-rest API.",
+  "documentation": "https://github.com/TheMegamind/Rachio_Run_Times",
+  "issue_tracker": "https://github.com/TheMegamind/Rachio_Run_Times/issues",
+  "domains": ["sensor"],
+  "iot_class": "cloud_polling",
+  "homeassistant": "2024.1.0",
+  "render_readme": true
+}
