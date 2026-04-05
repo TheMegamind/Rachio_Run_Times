@@ -107,31 +107,36 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
         return data.get("devices", [])
 
     # ------------------------------------------------------------------
-    # Step 2 — Fetch zone state from cloud-rest for each device
+    # Step 2 — Fetch per-zone run timestamps from cloud-rest listZones
     # ------------------------------------------------------------------
 
-    async def _async_get_device_state(self, device_id: str) -> dict:
-        """Return the raw getDeviceState payload for one controller.
+    async def _async_get_zone_list(self, device_id: str) -> list[dict]:
+        """Return the zoneSummary list for one controller.
 
-        The endpoint returns a structure like:
+        The listZones endpoint returns per-zone timestamps:
             {
-              "state": {
-                "reported": {
-                  "zones": {
-                    "<zone_id>": {
+              "result": {
+                "zoneSummary": [
+                  {
+                    "zoneDetail": {"id": "<zone_id>", ...},
+                    "zoneState": {
                       "lastRun":        "2026-04-05T03:39:18Z",
                       "lastRunEndTime": "2026-04-05T05:11:06Z",
                       "nextRun":        "2026-04-06T03:39:16Z",
-                      ...
-                    },
-                    ...
-                  }
-                }
+                    }
+                  },
+                  ...
+                ]
               }
             }
         """
-        url = f"{RACHIO_CLOUD_REST_BASE}/device/getDeviceState/{device_id}"
-        return await self._async_get_json(url)
+        url = f"{RACHIO_CLOUD_REST_BASE}/device/listZones/{device_id}"
+        payload = await self._async_get_json(url)
+        return (
+            payload
+            .get("result", {})
+            .get("zoneSummary", [])
+        )
 
     # ------------------------------------------------------------------
     # DataUpdateCoordinator required method
@@ -140,8 +145,9 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch fresh run timestamps for all zones across all devices.
 
-        Fetches the public-API device list once, then calls getDeviceState
-        for each device.  Returns a flat dict keyed by zone_id.
+        Fetches the public-API device list once for zone names, then calls
+        listZones on cloud-rest for each device to get per-zone timestamps.
+        Returns a flat dict keyed by zone_id.
         """
         result: dict[str, dict] = {}
 
@@ -166,61 +172,27 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
                 )
                 continue
 
-            # Fetch zone state from cloud-rest
+            # Fetch per-zone timestamps from cloud-rest listZones
             try:
-                state_payload = await self._async_get_device_state(device_id)
-                _LOGGER.debug(
-                    "Raw cloud-rest payload for device %s (%s): %s",
-                    device_name,
-                    device_id,
-                    state_payload,
-                )
+                zone_summaries = await self._async_get_zone_list(device_id)
             except UpdateFailed as err:
-                # Log and continue — don't fail the whole update just because
-                # one device's cloud-rest call failed.
                 _LOGGER.warning(
-                    "Could not fetch state for device %s (%s): %s",
+                    "Could not fetch zone list for device %s (%s): %s",
                     device_name,
                     device_id,
                     err,
                 )
                 continue
 
-            # Navigate to the zones dict inside the cloud-rest payload.
-            # The exact nesting path can vary; handle both known structures.
-            zones_state: dict = {}
-            try:
-                # Primary path: state.reported.zones
-                zones_state = (
-                    state_payload
-                    .get("state", {})
-                    .get("reported", {})
-                    .get("zones", {})
-                )
-                # Fallback path: direct zones key at root
-                if not zones_state:
-                    zones_state = state_payload.get("zones", {})
-            except (AttributeError, TypeError):
-                _LOGGER.warning(
-                    "Unexpected cloud-rest payload shape for device %s — "
-                    "zone state unavailable.  Raw keys: %s",
-                    device_name,
-                    list(state_payload.keys()) if isinstance(state_payload, dict) else type(state_payload),
-                )
-
-            _LOGGER.debug(
-                "zones_state keys for device %s: %s",
-                device_name,
-                list(zones_state.keys()),
-            )
-            _LOGGER.debug(
-                "zone_name_map keys for device %s: %s",
-                device_name,
-                list(zone_name_map.keys()),
-            )
+            # Build a zone_id → zoneState lookup from the listZones response
+            zone_state_map: dict[str, dict] = {
+                summary["zoneDetail"]["id"]: summary.get("zoneState", {})
+                for summary in zone_summaries
+                if summary.get("zoneDetail", {}).get("id")
+            }
 
             for zone_id, zone_name in zone_name_map.items():
-                zone_state = zones_state.get(zone_id, {})
+                zone_state = zone_state_map.get(zone_id, {})
 
                 result[zone_id] = {
                     KEY_ZONE_NAME: zone_name,
