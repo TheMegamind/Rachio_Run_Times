@@ -208,6 +208,17 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
                     list(state_payload.keys()) if isinstance(state_payload, dict) else type(state_payload),
                 )
 
+            _LOGGER.debug(
+                "zones_state keys for device %s: %s",
+                device_name,
+                list(zones_state.keys()),
+            )
+            _LOGGER.debug(
+                "zone_name_map keys for device %s: %s",
+                device_name,
+                list(zone_name_map.keys()),
+            )
+
             for zone_id, zone_name in zone_name_map.items():
                 zone_state = zones_state.get(zone_id, {})
 
