@@ -1,9 +1,9 @@
 {
   "domain": "rachio_run_times",
   "name": "Rachio Run Times",
-  "version": "1.0.0",
-  "documentation": "https://github.com/home-assistant/core/tree/dev/homeassistant/components/rachio",
-  "issue_tracker": "",
+  "version": "1.0.3",
+  "documentation": "https://github.com/TheMegamind/Rachio_Run_Times",
+  "issue_tracker": "https://github.com/TheMegamind/Rachio_Run_Times/issues",
   "dependencies": [],
   "codeowners": [],
   "requirements": [],
