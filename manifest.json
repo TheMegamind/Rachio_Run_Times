@@ -1,0 +1,12 @@
+{
+  "domain": "rachio_run_times",
+  "name": "Rachio Run Times",
+  "version": "1.0.0",
+  "documentation": "https://github.com/home-assistant/core/tree/dev/homeassistant/components/rachio",
+  "issue_tracker": "",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}

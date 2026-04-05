@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rachio Run Times",
+        "description": "Enter your Rachio API key.  Find it at app.rach.io → Account Settings → Get API Key.",
+        "data": {
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to reach the Rachio API.  Check your network connection.",
+      "invalid_auth": "Invalid API key — please double-check and try again.",
+      "unknown": "An unexpected error occurred.  Check the Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This Rachio account is already configured."
+    }
+  }
+}
