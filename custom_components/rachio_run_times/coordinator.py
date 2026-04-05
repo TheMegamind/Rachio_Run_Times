@@ -132,16 +132,7 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
         """
         url = f"{RACHIO_CLOUD_REST_BASE}/device/listZones/{device_id}"
         payload = await self._async_get_json(url)
-        _LOGGER.debug(
-            "Raw listZones payload for device %s: %s",
-            device_id,
-            payload,
-        )
-        return (
-            payload
-            .get("result", {})
-            .get("zoneSummary", [])
-        )
+        return payload.get("zoneSummary", [])
 
     # ------------------------------------------------------------------
     # DataUpdateCoordinator required method
