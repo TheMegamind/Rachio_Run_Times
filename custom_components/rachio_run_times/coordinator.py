@@ -169,6 +169,12 @@ class RachioRunTimesCoordinator(DataUpdateCoordinator):
             # Fetch zone state from cloud-rest
             try:
                 state_payload = await self._async_get_device_state(device_id)
+                _LOGGER.debug(
+                    "Raw cloud-rest payload for device %s (%s): %s",
+                    device_name,
+                    device_id,
+                    state_payload,
+                )
             except UpdateFailed as err:
                 # Log and continue — don't fail the whole update just because
                 # one device's cloud-rest call failed.
